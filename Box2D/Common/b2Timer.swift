@@ -25,25 +25,34 @@ the original C++ code written by Erin Catto.
 */
 
 import Foundation
-import UIKit
 
 /// Timer for profiling. This has platform specific code and may
 /// not work on every platform.
 open class b2Timer {
+
+  var timebaseInfo = mach_timebase_info_data_t()
+
   /// Constructor
   public init() {
-    m_start = CACurrentMediaTime()
+    mach_timebase_info(&timebaseInfo)
+    m_start = mach_absolute_time()
   }
   
   /// Reset the timer.
   open func reset() {
-    m_start = CACurrentMediaTime()
+    m_start = mach_absolute_time()
   }
   
   /// Get the time since construction or the last reset.
   open var milliseconds: b2Float {
-    return b2Float(CACurrentMediaTime() - m_start) * b2Float(1000.0)
+    return b2Float(machAbsoluteToMilliseconds(mach_absolute_time() - m_start))
   }
   
-  var m_start: CFTimeInterval
+  var m_start: UInt64
+
+  func machAbsoluteToMilliseconds(_ machAbsolute: UInt64) -> b2Float {
+    let nanos = b2Float(machAbsolute * UInt64(timebaseInfo.numer)) / b2Float(timebaseInfo.denom)
+    return nanos / 1.0e6;
+  }
+
 }
